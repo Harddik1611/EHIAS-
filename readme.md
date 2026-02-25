@@ -4,7 +4,7 @@
 EHIAS is a **MySQL-based hospital database system** designed to migrate a legacy **Excel-based hospital record system** into a **structured, secure, and automated relational database**.  
 The project focuses on enforcing **data integrity, business rules, access control, and reporting automation** directly at the database level.
 
-
+--------
 ## 🎯 Problem Statement
 The hospital previously managed patients, doctors, appointments, billing, and lab records using Excel files, which led to:
 - No guaranteed unique identifiers
@@ -15,14 +15,15 @@ The hospital previously managed patients, doctors, appointments, billing, and la
 
 All critical rules are enforced **at the database level** using **constraints, triggers, and stored procedures**.
 
----
+----------
 ## ✅ Solution Summary
 This project replaces Excel with a **normalized relational database (3NF)** using MySQL and solves the above issues through:
 - Primary & foreign keys
 - CHECK constraints
 - Triggers for validation
 - Stored procedures for automation and security
----
+
+-------------
 
 ## 🧱 Database Creation
 The system models core hospital operations using the following entities:
@@ -34,7 +35,7 @@ The system models core hospital operations using the following entities:
 - Lab Reports  
 - Bills 
 
-## Data Modelling Structure within EHIAS
+## EHIAS Database ER Diagram
 ![ER Diagram](Ehias_er_dig.png)
 
 
@@ -63,6 +64,7 @@ CREATE TABLE Departments (
 - AUTO_INCREMENT ensures unique department identifiers.
 - Departments act as a parent entity for doctors and revenue reporting.
 
+---------
 ## 👨‍⚕️ Doctors Table
 ```
 CREATE TABLE Doctors (
@@ -79,6 +81,7 @@ CREATE TABLE Doctors (
 - Role is later used for access control in stored procedures.
 - Foreign key enforces valid department mapping.
 
+---------
 ## 🧑‍🦱 Patients Table
 ```
 CREATE TABLE Patients (
@@ -94,6 +97,7 @@ CREATE TABLE Patients (
 - Gender values restricted to valid options only ("M" or "F" or others as "o")
 - Prevents ambiguous entries like 'X' or 'Malee'.
 
+----------
 ## 📅 Appointments Table
 ```
 CREATE TABLE Appointments (
@@ -112,6 +116,7 @@ CREATE TABLE Appointments (
 - Links patients and doctors using foreign keys.
 - Appointment status strictly controlled.
 - Foundation for billing, prescriptions, and lab reports.
+--------
 
 ## 💊 Prescriptions Table
 ```
@@ -126,6 +131,7 @@ CREATE TABLE Prescriptions (
 ### Purpose:
 - Prescriptions tied directly to appointments.
 - Prevents orphan medical records.
+---------
 
 ## 🧾 Bills Table
 ```
@@ -142,6 +148,8 @@ CREATE TABLE Bills (
 - Enables financial tracking per appointment.
 - Supports revenue aggregation by department.
 
+------------
+
 ## 🧪 Lab Reports Table
 ```
 CREATE TABLE LabReports (
@@ -155,6 +163,8 @@ CREATE TABLE LabReports (
 ### Purpose:
 - Stores diagnostic results.
 - Maintains strict linkage to appointments.
+
+-----------
 
 ### 📦 Data Migration Strategy
 - Legacy Excel data was imported into a staging table called hospital_data.
@@ -175,6 +185,7 @@ WHERE `Patients.PatientID` <> '';
 - Migrates clean data only.
 
 ----
+
 ## ⚙️ Trigger: Appointment Validation
 ```
 CREATE TRIGGER Check_New_Appointment
@@ -206,7 +217,7 @@ A `BEFORE INSERT` trigger on appointments ensures:
 **Result:**  
 Prevents invalid scheduling and enforces real-world hospital rules automatically.
 
------
+---------
 
 ## 🔐 Stored Procedure: Role-Based Doctor Access
 ```
@@ -255,7 +266,7 @@ END;
 
 This ensures **secure and controlled access to sensitive patient information**.
 
------
+---------
 
 ## 📊 Stored Procedure: Monthly Revenue Report
 ```
@@ -283,7 +294,7 @@ END;
 
 Used for **management reporting and financial analysis**.
 
----
+-------
 
 ## 🚀 Key Outcomes
 - Migrated Excel-based hospital data into a **production-ready MySQL database**
@@ -293,6 +304,10 @@ Used for **management reporting and financial analysis**.
 - Implemented database-level security and access control.
 - Improved data accuracy, scalability, and reliability.
 
+## EHIAS PESTEL Analysis
+![EHIAS PESTEL ANALYSIS](Pestel_Analysis.png)
+
+------
 
 ## 🛠️ Technologies Used
 - MySQL
@@ -301,11 +316,13 @@ Used for **management reporting and financial analysis**.
 - Stored Procedures
 - Relational Database Design (3NF)
 
+------
+
 ## 📄 Author
 Harddik Singh
 SQL • Data Analytics • Hospital Database Design
 
-
+-------
 
 
 
