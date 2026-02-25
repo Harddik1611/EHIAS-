@@ -6,14 +6,83 @@ The project focuses on enforcing **data integrity, business rules, access contro
 
 --------
 ## 🎯 Problem Statement
-The hospital previously managed patients, doctors, appointments, billing, and lab records using Excel files, which led to:
-- No guaranteed unique identifiers
-- Disconnected and unenforced relationships
-- Invalid and inconsistent data entries
-- Manual and error-prone operations
-- No access control or automated reporting
+
+**Background:**
+Our hospital has been maintaining all its records — including patient details, doctor rosters, appointments, prescriptions, lab reports, and billing — using Excel files. As operations scaled, this method became inefficient, error-prone, and difficult to manage. We are transitioning to a relational database system to improve data integrity, performance, and scalability.
+
+**Problem Description:**
+Build a robust, well-structured relational database that captures core hospital functionality and migrates data from the current Excel-based system into the new database. The migration must ensure data integrity and consistency. The database should also enforce business rules for appointment management, doctor access control, and generation of department-wise revenue reports.
+
+Problems that were resloved with this Database Design are:
+1. Lack of Unique Identifiers
+    - Current Excel sheets contain no guaranteed unique IDs for patients, doctors, departments, or appointments.
+    - Solution: introduce `AUTO_INCREMENT` primary keys and proper unique constraints to guarantee uniqueness.
+2. Disconnected Relationships
+    - Appointments exist in spreadsheets but are not enforceably linked to valid patients or doctors.
+    - Solution: use foreign keys to enforce referential integrity between `Patients`, `Doctors`, `Departments`, and `Appointments`.
+3. Invalid or Ambiguous Data Entries
+    - Examples: gender values like "X", appointment statuses like "On Hold", and inconsistent date formats.
+    - Solution: enforce domain constraints and CHECK rules (e.g., Gender must be `M`, `F`, or `O`; Status must be `Scheduled`, `Completed`, or `Cancelled`), plus migration scripts to normalize formats.
+
+4. Unregulated Scheduling
+    - Doctors are sometimes double-booked and appointments are created in the past.
+    - Solution: implement `BEFORE INSERT` triggers that validate appointment times (prevent past dates) and detect double-booking for the same doctor/time slot.
+5. Open Access to Sensitive Patient Information
+    - All doctors currently see all patient data regardless of role or department.
+    - Solution: implement role-based access using stored procedures that check credentials and return either department-wide data for senior doctors or only per-doctor patients for others.
+6. Disconnected Reporting
+    - No way to generate billing or departmental summaries across the hospital.
+    - Solution: stored procedures that aggregate billing data (e.g., monthly revenue by department) and produce management-ready reports.
+
+### How the SQL solves each problem
+- Problem 1: `AUTO_INCREMENT` primary keys and `UNIQUE` constraints are included in the DDL inside [Hospital_Database_Creation.sql](Hospital_Database_Creation.sql).
+- Problem 2: Foreign key definitions in the table DDL enforce referential integrity; see the `FOREIGN KEY` clauses in the same script.
+- Problem 3: `CHECK` constraints and data-normalization `INSERT ... SELECT STR_TO_DATE(...)` migration statements are included in the migration section of [Hospital_Database_Creation.sql](Hospital_Database_Creation.sql).
+- Problem 4: The trigger `Check_New_Appointment` (shown below and present in `Hospital_Database_Creation.sql`) prevents past appointments and double-booking:
+
+```
+CREATE TRIGGER Check_New_Appointment
+BEFORE INSERT ON Appointments
+FOR EACH ROW
+BEGIN
+    IF NEW.Appointmenttime < NOW() THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Appointment cannot be in the past';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM Appointments
+        WHERE Doctorid = NEW.Doctorid
+        AND Appointmenttime = NEW.Appointmenttime
+        AND Status = 'Scheduled'
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Doctor already has an appointment at this time';
+    END IF;
+END;
+```
+
+- Problem 5: The stored procedure `VIEW_DOCTOR_DATA` (also in `Hospital_Database_Creation.sql`) enforces role-based access:
+
+```
+CREATE PROCEDURE VIEW_DOCTOR_DATA (
+    IN INPUT_USERNAME VARCHAR(100),
+    IN INPUT_PASSWORD VARCHAR(100)
+)
+BEGIN
+    -- authenticate and load role/department, then return rows based on role
+END;
+```
+
+- Problem 6: The stored procedure `SP_MONTHLY_REVENUE` aggregates billing by department and accepts `P_YEAR` and `P_MONTH` as inputs; it is included in `Hospital_Database_Creation.sql`.
+
+For full SQL code, see [Hospital_Database_Creation.sql](Hospital_Database_Creation.sql) in this repository; the script includes the DDL, triggers, stored procedures, and example migration statements referenced above.
 
 All critical rules are enforced **at the database level** using **constraints, triggers, and stored procedures**.
+
+### Included SQL Scripts (in this repository)
+- [Hospital_Database_Creation.sql](Hospital_Database_Creation.sql): contains DDL to create schema (tables, keys, CHECK constraints), triggers for appointment validation and other business rules, stored procedures for role-based access and revenue reporting, and migration SQL used to import the legacy Excel/staging data.
+- `dataset/`: contains CSVs used for migration and testing, for example `dataset/hospital_data_10000_rows.csv` and `dataset/doctor_credentials.csv`.
+
+Use the SQL script `Hospital_Database_Creation.sql` to recreate the database and to review the triggers and stored procedures that solve the problems described above.
 
 ----------
 ## ✅ Solution Summary
@@ -44,14 +113,15 @@ The system models core hospital operations using the following entities:
 - Foreign keys to enforce referential integrity
 - Domain constraints to prevent invalid data
 
-=*=*50
+--------
 ```sql
 CREATE DATABASE EHIAS;
 USE EHIAS;
 ```
 ## Purpose:
 - Creates a dedicated database to isolate hospital data and ensure maintainability.
-=*=*50
+
+------
 
 ## 🏢 Departments Table
 ```
